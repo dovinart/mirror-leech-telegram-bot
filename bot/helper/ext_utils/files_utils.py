@@ -7,7 +7,7 @@ from shutil import rmtree
 from subprocess import run as srun
 from sys import exit as sexit
 
-from bot import aria2, LOGGER, DOWNLOAD_DIR, get_qb_client
+from bot import aria2, LOGGER, DOWNLOAD_DIR, qbittorrent_client
 from bot.helper.ext_utils.bot_utils import sync_to_async, cmd_exec
 from .exceptions import NotSupportedExtractionArchive
 
@@ -91,9 +91,9 @@ async def clean_download(path):
 
 def clean_all():
     aria2.remove_all(True)
-    get_qb_client().torrents_delete(torrent_hashes="all")
+    qbittorrent_client.torrents_delete(torrent_hashes="all")
     try:
-        LOGGER.info("Cleaning Download Directory...")
+        LOGGER.info("Cleaning Download Directory")
         rmtree(DOWNLOAD_DIR, ignore_errors=True)
     except:
         pass
@@ -111,7 +111,9 @@ def exit_clean_up(signal, frame):
         sexit(1)
 
 
-async def clean_unwanted(path, custom_list=[]):
+async def clean_unwanted(path, custom_list=None):
+    if custom_list is None:
+        custom_list = []
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
     for dirpath, _, files in await sync_to_async(walk, path, topdown=False):
         for filee in files:
@@ -141,7 +143,9 @@ async def get_path_size(path):
     return total_size
 
 
-async def count_files_and_folders(path, extension_filter, unwanted_files=[]):
+async def count_files_and_folders(path, extension_filter, unwanted_files=None):
+    if unwanted_files is None:
+        unwanted_files = []
     total_files = 0
     total_folders = 0
     for dirpath, dirs, files in await sync_to_async(walk, path):
